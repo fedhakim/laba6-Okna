@@ -1,0 +1,125 @@
+unit Unit1;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, ClipBrd, ExtCtrls;
+
+type
+  TForm1 = class(TForm)
+    Button1: TButton;
+    Button2: TButton;
+    ListBox1: TListBox;
+    Button5: TButton;
+    Button3: TButton;
+    procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
+
+    procedure Button5Click(Sender: TObject);
+
+
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+{$R *.dfm}
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+    if findwindow(nil,'Корзина')<>0
+      then begin
+           showmessage('Окно присутствует');
+           setwindowpos(findwindow(nil,'Корзина'),HWND_BOTTOM,1,1,1000,800,HWND_TOP);//HWND_TOP помещает окно наверху последовательности Z
+           end
+      else showmessage('Окно отсутствует');
+
+end;
+
+procedure TForm1.Button2Click(Sender: TObject);
+begin
+  if findwindow(nil,'Корзина')<>0
+    then
+      begin
+      setwindowtext(findwindow(nil,'Корзина'),'Хлам');
+     if isIconic(findwindow(nil,'Хлам'))
+        then OpenIcon(findwindow(nil,'Хлам'))
+        else CloseWindow(findwindow(nil,'Хлам'));
+      end
+      else showmessage('Запрашиваемое окно отсутствует');
+end;
+
+
+
+function EnumProc (Wd: Hwnd; Param: Longint): Boolean;stdcall;
+Var
+ Nm:Array[0..255] of Char; //буфер для имени
+ Cs: Array[0..255] of Char; //буфер для класса
+ begin
+ getwindowtext(Wd,Nm,255);//считываем текст заголовка
+ getclassname(Wd,Cs,255); //считываем название класса окна
+ //исключаем свою программму из списка
+ if Wd <> Form1.Handle then
+ Form1.ListBox1.Items.Add(string(Nm)+'/'+String(cs)); //добавляем название окна и класс в список
+ EnumProc := TRUE; //продолжаем искать окна
+ end;
+
+procedure TForm1.Button3Click(Sender: TObject);
+begin
+  ListBox1.Items.Clear;// очистим список перед началом поиска
+  EnumWindows (@EnumProc,0); //запустим функцию поиска
+end;
+
+procedure TForm1.Button5Click(Sender: TObject);
+ var hnd:thandle;
+ canvas:tcanvas;
+ dc:hdc;
+ a,b:integer;
+ WinDc:HDC;
+ Arect:Trect;
+ result:Tbitmap;
+ begin
+  hnd:=findwindow(nil,'Корзина'); //находим окно
+
+  result:=tbitmap.create;
+  GetWindowRect(hnd,Arect);//создаем рисунок куда будем копировать
+  // Узнаем результат
+  with result, arect do
+    begin
+      a :=Arect.Right-Arect.Left;
+      b := Arect.Bottom-Arect.Top;
+      //If (Width=0) or (Height=0) then
+   //begin
+   //MessageDlg('Размер области формы равен нулю', mtWarning,[mbOk],0);//вдруг у него нет размера
+   // end;
+    end;
+  canvas:=tcanvas.Create;   //создаем канву
+  dc:=getdc(hnd);//получаем дескриптор кнопки
+  //showmessage(inttostr(dc));    //меняем тип
+  with canvas do
+   begin
+    handle:=dc; //теперь с поверхностью "кнопки" можно работать
+    rectangle(0,0,a,b); // рисуем прямоугольник на кнопке
+    font.color:=$0000ff; //ставим красный цвет шрифта
+    //выдим текст 
+    textout(400,30,'Hello');
+    textout(400,60,'World');
+
+   free;
+   end;
+result.Free;
+end;
+
+
+end.
+
+
+
